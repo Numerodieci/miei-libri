@@ -397,3 +397,55 @@ footer {
 .card-quiz h2 { color: #065F46; }
 .card-quiz .card-cta { background: #10B981; }
 .card-quiz:hover .card-cta { background: #059669; }
+/* ===== BARRA DI RICERCA — stile libri ===== */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 3px solid #BFDBFE;
+  border-radius: 999px;
+  padding: 6px 8px 6px 56px;
+  position: relative;
+  box-shadow: 0 4px 0 #93C5FD, 0 10px 24px rgba(59, 130, 246, 0.18);
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+.search-wrapper:focus-within {
+  border-color: #3B82F6;
+  box-shadow: 0 5px 0 #1D4ED8, 0 14px 30px rgba(59, 130, 246, 0.32);
+  transform: translateY(-2px);
+}
+
+.search-wrapper::before {
+  content: "📚";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  font-size: 1.45em;
+  pointer-events: none;
+  animation: bookFloat 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 2px 3px rgba(30, 64, 175, 0.3));
+}
+
+@keyframes bookFloat {
+  0%, 100% { transform: translateY(-50%) rotate(-7deg); }
+  50%      { transform: translateY(-56%) rotate(7deg); }
+}
+
+#globalSearch {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 12px 8px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 700;
+  font-size: 1.05em;
+  color: #1F2937;
+  min-width: 0;
+}
+
+#globalSearch::placeholder { color: #94A3B8; font-weight: 600; }
+
+.search-clear { flex-shrink: 0; }
