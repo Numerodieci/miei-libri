@@ -217,6 +217,10 @@ header p { font-family:'Fredoka',sans-serif; color:#1E40AF; background:#fff; dis
         <h3>📚 Quale classe?</h3>
         <div class="class-grid" id="classGrid"></div>
       </div>
+      <div id="materieBlock" style="display:none;">
+  <p style="font-weight:700;color:#334155;margin:14px 0 8px;">📚 Materie (tocca per scegliere, anche più di una)</p>
+  <div id="materieChips" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
 
       <div class="option-group">
         <h3>🎯 Difficoltà</h3>
@@ -317,6 +321,7 @@ header p { font-family:'Fredoka',sans-serif; color:#1E40AF; background:#fff; dis
 <script>
 /* ================== STATO ================== */
 const sel = { mode:'classe', classi:[], difficolta:'facile', numDomande:5, argomento:'tutti', timer:'no', nome:'' };
+const MATERIE = [...new Set(Object.values(QBANCO).flat().map(q=>q.m))];
 let quizQuestions = [], currentIndex = 0, score = 0, wrongList = [];
 let timerOn = false, secLeft = 30, timerInterval = null;
 
@@ -379,45 +384,28 @@ function goSetup(mode){
     multi:'🎲 Quiz mix — configura'
   };
   document.getElementById('setup-title').textContent = titoli[mode];
+  if(mode==='multi'){ sel.materie = []; }
+  document.getElementById('materieBlock').style.display = (mode==='multi')?'block':'none';
   renderClassGrid();
+  renderMaterie();
   renderTopicChips();
   showScreen('screen-setup');
 }
 
-function renderClassGrid(){
-  const g = document.getElementById('classGrid');
-  g.innerHTML = '';
-  if(sel.mode === 'generale'){
-    g.innerHTML = '<p style="color:#64748B;font-weight:600;">Domande prese da tutte le 5 classi 🎲</p>';
-    sel.classi = ['1','2','3','4','5'];
-    return;
-  }
-  const multi = (sel.mode === 'multi');
-  for(let i=1;i<=5;i++){
+function renderMaterie(){
+  const box = document.getElementById('materieChips');
+  box.innerHTML = '';
+  MATERIE.forEach(m=>{
     const b = document.createElement('button');
-    b.className = 'class-chip' + (sel.classi.includes(String(i))?' selected':'');
-    b.textContent = i + 'ª';
+    b.className = 'chip' + (sel.materie.includes(m)?' selected':'');
+    b.textContent = m;
     b.onclick = ()=>{
-      const v = String(i);
-      if(multi){
-        if(sel.classi.includes(v)){
-          if(sel.classi.length===1) return; // almeno una
-          sel.classi = sel.classi.filter(c=>c!==v);
-        }else{
-          if(sel.classi.length>=3){ toast('Massimo 3 classi! 🙂'); return; }
-          sel.classi.push(v);
-        }
-      }else{
-        sel.classi = [v];
-      }
-      renderClassGrid(); renderTopicChips();
+      if(sel.materie.includes(m)) sel.materie = sel.materie.filter(x=>x!==m);
+      else sel.materie.push(m);
+      renderMaterie();
     };
-    g.appendChild(b);
-  }
-  if(!multi){
-    if(sel.classi.length!==1) sel.classi = ['1'];
-    g.querySelectorAll('.class-chip')[Number(sel.classi[0])-1].classList.add('selected');
-  }
+    box.appendChild(b);
+  });
 }
 
 function renderTopicChips(){
@@ -425,8 +413,16 @@ function renderTopicChips(){
   box.innerHTML = '';
   let pool = [];
   sel.classi.forEach(c=>{ pool = pool.concat(poolDiClasse(c)); });
-  const args = [...new Set(pool.map(q=>q.a))];
-  args.forEach(a=>{
+  // chip per MATERIA (quiz generale)
+  [...new Set(pool.map(q=>q.m))].forEach(m=>{
+    const b = document.createElement('button');
+    b.className = 'chip' + (sel.argomento===m?' selected':'');
+    b.textContent = '📘 ' + m;
+    b.onclick = ()=>{ sel.argomento = m; refreshChipSel(); };
+    box.appendChild(b);
+  });
+  // chip per ARGOMENTO
+  [...new Set(pool.map(q=>q.a))].forEach(a=>{
     const b = document.createElement('button');
     b.className = 'chip' + (sel.argomento===a?' selected':'');
     b.textContent = a;
@@ -434,39 +430,13 @@ function renderTopicChips(){
     box.appendChild(b);
   });
 }
-function refreshChipSel(){
-  renderTopicChips();
-  const tutti = document.querySelector('[data-choice="argomento"] [data-val="tutti"]');
-  tutti.classList.toggle('selected', sel.argomento==='tutti');
-}
-
-/* chips generiche (difficoltà, numero, timer) */
-document.querySelectorAll('.chips[data-choice]').forEach(gr=>{
-  gr.addEventListener('click', e=>{
-    const b = e.target.closest('.chip'); if(!b) return;
-    gr.querySelectorAll('.chip').forEach(c=>c.classList.remove('selected'));
-    b.classList.add('selected');
-    sel[gr.dataset.choice] = b.dataset.val;
-    if(gr.dataset.choice==='argomento') renderTopicChips();
-  });
-});
-
-/* ================== COSTRUZIONE QUIZ ================== */
-function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-
-function poolDiClasse(classe){
-  let p = [];
-  Object.keys(QBANCO).forEach(chiave=>{
-    if (chiave === classe || chiave.startsWith(classe)) p = p.concat(QBANCO[chiave] || []);
-  });
-  return p;
-}
 
 function buildPool(){
   let pool = [];
   sel.classi.forEach(c=>{ pool = pool.concat(poolDiClasse(c)); });
+  if(sel.materie.length) pool = pool.filter(q=>sel.materie.includes(q.m));
   pool = pool.filter(q=>q.d===sel.difficolta);
-  if(sel.argomento!=='tutti') pool = pool.filter(q=>q.a===sel.argomento);
+  if(sel.argomento!=='tutti') pool = pool.filter(q=>q.a===sel.argomento || q.m===sel.argomento);
   return shuffle([...pool]);
 }
 
