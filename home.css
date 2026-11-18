@@ -392,3 +392,8 @@ footer {
     height: 30px;
   }
 }
+.card-quiz { border-top-color: #10B981; }
+.card-quiz::before { background: #10B981; }
+.card-quiz h2 { color: #065F46; }
+.card-quiz .card-cta { background: #10B981; }
+.card-quiz:hover .card-cta { background: #059669; }
