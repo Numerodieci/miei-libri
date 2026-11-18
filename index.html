@@ -127,9 +127,24 @@
   <footer>
     <p>✨ 12 materie • 5 classi ciascuna • Un quiz per metterti alla prova ✨</p>
     <p class="install-hint" id="installHint"></p>
+    <p class="share-hint"><button id="btnShare" class="install-btn">📱 Condividi l'app</button></p>
   </footer>
 </div>
 
+<div id="shareModal" class="share-modal" hidden>
+  <div class="share-box">
+    <h2>📲 Porta l'app con te</h2>
+    <p>Inquadra il codice col telefono per aprire il sito:</p>
+    <div id="qrBox" class="qr-box"></div>
+    <p class="share-url">numerodieci.github.io/miei-libri</p>
+    <div class="share-actions">
+      <button id="shareCopy" class="share-copy">📋 Copia link</button>
+      <button id="shareClose" class="share-close">✕ Chiudi</button>
+    </div>
+  </div>
+</div>
+
+<script src="qrcode.js"></script>
 <script>
 const searchInput = document.getElementById('globalSearch');
 const searchClear = document.getElementById('searchClear');
@@ -234,6 +249,47 @@ window.addEventListener('beforeinstallprompt', (e) => {
 window.addEventListener('appinstalled', () => {
   installHint.innerHTML = '✅ App installata con successo!';
 });
+
+/* ===== CONDIVIDI APP (QR + link) ===== */
+const SITE_URL = 'https://numerodieci.github.io/miei-libri/';
+const shareModal = document.getElementById('shareModal');
+
+function openShare() {
+  const qrBox = document.getElementById('qrBox');
+  if (!qrBox.dataset.done) {
+    if (typeof qrcode === 'function') {
+      try {
+        const qr = qrcode(0, 'L');
+        qr.addData(SITE_URL);
+        qr.make();
+        qrBox.innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2 });
+      } catch (e) {
+        qrBox.innerHTML = '<a href="' + SITE_URL + '">' + SITE_URL + '</a>';
+      }
+    } else {
+      qrBox.innerHTML = '<a href="' + SITE_URL + '">' + SITE_URL + '</a>';
+    }
+    qrBox.dataset.done = '1';
+  }
+  shareModal.hidden = false;
+}
+
+document.getElementById('btnShare').addEventListener('click', openShare);
+document.getElementById('shareClose').addEventListener('click', () => { shareModal.hidden = true; });
+shareModal.addEventListener('click', (e) => { if (e.target === shareModal) shareModal.hidden = true; });
+
+document.getElementById('shareCopy').addEventListener('click', () => {
+  (navigator.clipboard ? navigator.clipboard.writeText(SITE_URL) : Promise.reject())
+    .then(() => toastShare('📋 Link copiato!'))
+    .catch(() => toastShare('Link: ' + SITE_URL));
+});
+
+function toastShare(msg) {
+  const info = document.querySelector('.share-url');
+  const old = info.textContent;
+  info.textContent = msg;
+  setTimeout(() => { info.textContent = old; }, 2000);
+}
 </script>
 
 </body>
