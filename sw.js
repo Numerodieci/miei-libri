@@ -3,6 +3,7 @@ const ASSETS = [
   './',
   './index.html',
   './viewer.html',
+  './quiz.html',
   './home.css',
   './manifest.webmanifest',
   './search-index.json',
@@ -38,7 +39,8 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', handlerWeb);
+async function handlerWeb(event) {
   event.respondWith(
     caches.match(event.request).then((cached) => {
       return cached || fetch(event.request).then((response) => {
@@ -50,4 +52,4 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => cached);
     })
   );
-});
+}
