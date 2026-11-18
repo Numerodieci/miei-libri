@@ -1,4 +1,4 @@
-const CACHE_NAME = 'miei-libri-v6';
+const CACHE_NAME = 'miei-libri-v7';
 const ASSETS = [
   './',
   './index.html',
