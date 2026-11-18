@@ -7,7 +7,6 @@
 <meta name="theme-color" content="#F8FAFC">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="home.css">
@@ -21,10 +20,21 @@
   </header>
 
   <div class="search-wrapper">
-    <input type="search" id="globalSearch" placeholder="🔍 Cerca in tutti i 12 libri...">
+    <input type="search" id="globalSearch" placeholder="📚 Cerca nei tuoi libri...">
     <button id="searchClear" class="search-clear" title="Cancella">✕</button>
   </div>
   <div id="searchInfo" class="search-info"></div>
+
+  <div class="quiz-spotlight">
+    <a href="quiz.html" class="quiz-banner">
+      <span class="quiz-banner-emoji">🧠</span>
+      <span class="quiz-banner-testo">
+        <strong>Quiz!</strong>
+        <small>Metti alla prova quello che hai imparato!</small>
+      </span>
+      <span class="quiz-banner-cta">Gioca →</span>
+    </a>
+  </div>
 
   <main class="grid" id="grid">
 
@@ -111,17 +121,11 @@
       <p>Scopri la tecnologia che ci circonda!</p>
       <span class="card-cta">Apri il libro →</span>
     </a>
-    
-    <a href="quiz.html" class="card card-quiz" data-libro="quiz.html" data-keywords="quiz gioco domande verifica test classe mette alla prova">
-      <span class="card-emoji">🧠</span>
-      <h2>Quiz</h2>
-      <p>Metti alla prova quello che hai imparato!</p>
-      <span class="card-cta">Gioca →</span>
-    </a>
+
   </main>
 
   <footer>
-    <p>✨ 12 materie • 5 classi ciascuna • Un anno di scoperte ✨</p>
+    <p>✨ 12 materie • 5 classi ciascuna • Un quiz per metterti alla prova ✨</p>
     <p class="install-hint" id="installHint"></p>
   </footer>
 </div>
