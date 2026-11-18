@@ -5,6 +5,7 @@ const ASSETS = [
   './viewer.html',
   './quiz.html',
   './home.css',
+  './qrcode.js',
   './manifest.webmanifest',
   './search-index.json',
   './icons/icon-192.png',
