@@ -320,8 +320,7 @@ header p { font-family:'Fredoka',sans-serif; color:#1E40AF; background:#fff; dis
 
 <script>
 /* ================== STATO ================== */
-const sel = { mode:'classe', classi:[], difficolta:'facile', numDomande:5, argomento:'tutti', timer:'no', nome:'' };
-const MATERIE = [...new Set(Object.values(QBANCO).flat().map(q=>q.m))];
+const sel = { mode:'classe', classi:[], materie:[], difficolta:'facile', numDomande:5, argomento:'tutti', timer:'no', nome:'' };
 let quizQuestions = [], currentIndex = 0, score = 0, wrongList = [];
 let timerOn = false, secLeft = 30, timerInterval = null;
 
@@ -1265,6 +1264,7 @@ const QBANCO = {
 };
 
 console.log('Banco domande caricato: ' + Object.keys(QBANCO).length + ' classi.');
+const MATERIE = [...new Set(Object.values(QBANCO).flat().map(q=>q.m))];
 
 </script>
 </body>
