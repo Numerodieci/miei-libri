@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz - I Miei Libri</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family:'Nunito','Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#FFF7ED 0%,#F1F5F9 50%,#E0F2FE 100%);
+  background-attachment:fixed;
+  min-height:100vh; color:#1F2937; padding:20px; overflow-x:hidden;
+}
+
+#particles { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+.container { max-width:900px; margin:0 auto; position:relative; z-index:1; }
+
+header { text-align:center; padding:20px 10px; margin-bottom:16px; }
+header h1 { font-family:'Fredoka',sans-serif; font-size:2.6em; color:#1E40AF;
+  text-shadow:2px 2px 0 #DBEAFE,0 4px 12px rgba(30,64,175,.15); letter-spacing:1px; }
+header p { font-family:'Fredoka',sans-serif; color:#1E40AF; background:#fff; display:inline-block;
+  padding:8px 24px; border-radius:30px; box-shadow:0 4px 15px rgba(59,130,246,.15);
+  border:2px solid #BFDBFE; margin-top:10px; font-weight:600; }
+
+.screen { display:none; animation:appear .4s ease; }
+.screen.active { display:block; }
+@keyframes appear { from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
+
+.panel { background:#fff; border-radius:24px; padding:26px; box-shadow:0 8px 25px rgba(0,0,0,.08);
+  border-top:6px solid #10B981; margin-bottom:20px; }
+.panel h2 { font-family:'Fredoka',sans-serif; color:#065F46; font-size:1.5em; margin-bottom:16px; }
+
+.option-group { margin-bottom:20px; }
+.option-group h3 { font-family:'Fredoka',sans-serif; color:#374151; font-size:1.05em; margin-bottom:10px; }
+
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip {
+  font-family:'Fredoka',sans-serif; font-weight:600; font-size:.95em;
+  padding:9px 18px; border-radius:50px; border:2px solid #D1D5DB;
+  background:#fff; color:#374151; cursor:pointer; transition:all .2s ease;
+}
+.chip:hover { transform:translateY(-2px); box-shadow:0 4px 10px rgba(0,0,0,.1); }
+.chip.selected { background:#10B981; border-color:#059669; color:#fff; box-shadow:0 3px 0 #047857; }
+
+.class-grid { display:flex; flex-wrap:wrap; gap:10px; }
+.class-chip {
+  width:64px; height:64px; border-radius:18px; border:3px solid #BFDBFE;
+  background:#fff; font-family:'Fredoka',sans-serif; font-size:1.6em; font-weight:700;
+  color:#1D4ED8; cursor:pointer; transition:all .2s ease; display:flex; align-items:center; justify-content:center;
+}
+.class-chip:hover { transform:translateY(-3px); box-shadow:0 6px 14px rgba(59,130,246,.25); }
+.class-chip.selected { background:linear-gradient(135deg,#3B82F6,#1D4ED8); color:#fff; border-color:#1E3A8A; }
+
+.btn {
+  font-family:'Fredoka',sans-serif; font-weight:700; font-size:1.05em;
+  padding:14px 30px; border-radius:50px; border:none; cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.btn-main { background:linear-gradient(135deg,#10B981,#059669); color:#fff;
+  box-shadow:0 4px 0 #047857,0 6px 15px rgba(16,185,129,.3); }
+.btn-main:hover { transform:translateY(-2px); box-shadow:0 6px 0 #047857,0 8px 20px rgba(16,185,129,.4); }
+.btn-secondary { background:#E0F2FE; color:#1D4ED8; border:2px solid #BFDBFE; }
+.btn-danger { background:#FEE2E2; color:#DC2626; border:2px solid #FECACA; }
+.btn:disabled { opacity:.45; cursor:not-allowed; transform:none !important; }
+
+.mode-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
+.mode-card {
+  background:#fff; border-radius:22px; padding:26px 22px; text-align:center;
+  border-top:6px solid #3B82F6; box-shadow:0 6px 20px rgba(0,0,0,.08);
+  cursor:pointer; transition:transform .25s ease, box-shadow .25s ease;
+}
+.mode-card:hover { transform:translateY(-8px) rotate(-1deg); box-shadow:0 15px 35px rgba(0,0,0,.15); }
+.mode-card .mode-emoji { font-size:2.8em; display:block; margin-bottom:10px; }
+.mode-card h2 { font-family:'Fredoka',sans-serif; color:#1D4ED8; font-size:1.3em; margin-bottom:6px; }
+.mode-card p { color:#64748B; font-size:.92em; line-height:1.4; }
+
+/* ---- GAME ---- */
+.game-topbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;
+  gap:10px; margin-bottom:14px; font-family:'Fredoka',sans-serif; }
+.game-score { background:#fff; border:2px solid #BFDBFE; border-radius:50px; padding:8px 20px;
+  font-weight:600; color:#1E40AF; box-shadow:0 3px 10px rgba(59,130,246,.12); }
+.game-counter { background:#ECFDF5; border:2px solid #A7F3D0; border-radius:50px; padding:8px 20px;
+  font-weight:600; color:#065F46; }
+.timer-wrap { background:#fff; border-radius:50px; padding:6px; box-shadow:0 3px 12px rgba(0,0,0,.08);
+  flex:1; min-width:140px; max-width:260px; }
+.timer-bar { height:14px; border-radius:50px; background:linear-gradient(90deg,#10B981,#22C55E);
+  width:100%; transition:width 1s linear; }
+.timer-bar.warning { background:linear-gradient(90deg,#F97316,#EF4444); }
+
+.question-card { background:#fff; border-radius:24px; padding:30px 26px; text-align:center;
+  border-top:6px solid #10B981; box-shadow:0 8px 25px rgba(0,0,0,.08); margin-bottom:18px; }
+.question-tag { display:inline-block; background:#ECFDF5; color:#065F46; border:2px solid #A7F3D0;
+  font-family:'Fredoka',sans-serif; font-weight:600; font-size:.85em;
+  padding:5px 16px; border-radius:50px; margin-bottom:14px; }
+.question-text { font-family:'Fredoka',sans-serif; font-size:1.45em; font-weight:600;
+  color:#111827; line-height:1.4; }
+
+.answers { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media (max-width:600px){ .answers { grid-template-columns:1fr; } }
+.answer-btn {
+  background:#fff; border:3px solid #E5E7EB; border-radius:18px;
+  padding:16px 18px; font-family:'Nunito',sans-serif; font-weight:700; font-size:1.05em;
+  color:#374151; cursor:pointer; text-align:left; transition:all .2s ease;
+  display:flex; align-items:center; gap:12px;
+}
+.answer-btn .letter { font-family:'Fredoka',sans-serif; background:#EFF6FF; color:#1D4ED8;
+  width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-size:1em; }
+.answer-btn:hover:not(:disabled) { border-color:#10B981; transform:translateY(-3px);
+  box-shadow:0 6px 14px rgba(16,185,129,.2); }
+.answer-btn.correct { background:#DCFCE7; border-color:#16A34A; color:#14532D; }
+.answer-btn.wrong { background:#FEE2E2; border-color:#DC2626; color:#7F1D1D; animation:shake .4s; }
+.answer-btn:disabled { cursor:default; }
+@keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-7px);}
+  50%{transform:translateX(7px);} 75%{transform:translateX(-4px);} }
+
+/* ---- MEDAGLIE ---- */
+.medal-area { text-align:center; margin:14px 0; }
+.medal { font-size:5.5em; display:inline-block; animation:pop .7s cubic-bezier(.2,2.4,.4,1) both; }
+@keyframes pop { 0%{transform:scale(0) rotate(-30deg); opacity:0;}
+  70%{transform:scale(1.35) rotate(8deg);} 100%{transform:scale(1) rotate(0); opacity:1;} }
+.result-title { font-family:'Fredoka',sans-serif; font-size:2em; color:#1E40AF; text-align:center; }
+.result-score { text-align:center; font-size:1.3em; color:#065F46; font-weight:800;
+  font-family:'Fredoka',sans-serif; margin:8px 0 4px; }
+
+/* ---- REPORT / STATS ---- */
+.stat-line { display:flex; justify-content:space-between; background:#F9FAFB;
+  border:2px solid #E5E7EB; border-radius:14px; padding:10px 16px; margin-bottom:8px; font-weight:700; }
+.stat-line.good { border-color:#86EFAC; background:#F0FDF4; }
+.report-item { background:#FFF7ED; border:2px solid #FED7AA; border-radius:16px;
+  padding:14px 16px; margin-bottom:10px; }
+.report-item .rq { font-weight:800; color:#7C2D12; margin-bottom:6px; }
+.report-item .rgiven { color:#B91C1C; font-weight:700; }
+.report-item .rright { color:#15803D; font-weight:700; }
+
+.badge-row { display:flex; flex-wrap:wrap; gap:10px; margin:12px 0; }
+.badge-new { background:linear-gradient(135deg,#FBBF24,#F59E0B); color:#fff;
+  font-family:'Fredoka',sans-serif; font-weight:700; padding:8px 18px; border-radius:50px;
+  box-shadow:0 3px 0 #B45309; animation:pop .6s cubic-bezier(.2,2.4,.4,1) both; }
+
+/* ---- CLASSIFICA ---- */
+.lb-item { display:flex; align-items:center; gap:14px; background:#fff;
+  border:2px solid #E5E7EB; border-radius:16px; padding:12px 18px; margin-bottom:10px;
+  box-shadow:0 3px 10px rgba(0,0,0,.05); }
+.lb-pos { font-size:1.7em; }
+.lb-name { flex:1; font-weight:800; font-family:'Fredoka',sans-serif; color:#1E40AF; }
+.lb-score { font-weight:800; color:#065F46; font-family:'Fredoka',sans-serif; }
+
+.btn-row { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:16px; }
+
+.player-input { width:100%; max-width:340px; padding:12px 18px; border:3px solid #BFDBFE;
+  border-radius:16px; font-family:'Nunito',sans-serif; font-weight:700; font-size:1em;
+  outline:none; margin-bottom:6px; }
+.player-input:focus { border-color:#3B82F6; }
+
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(90px);
+  background:#1E40AF; color:#fff; font-family:'Fredoka',sans-serif; font-weight:600;
+  padding:12px 26px; border-radius:50px; transition:transform .35s ease; z-index:99; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+.back-link { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(135deg,#3B82F6,#1D4ED8);
+  color:#fff; text-decoration:none; padding:10px 18px; border-radius:12px; font-family:'Fredoka',sans-serif;
+  font-weight:700; box-shadow:0 3px 0 #1E3A8A; }
+.back-link:hover { transform:translateY(-2px); box-shadow:0 5px 0 #1E3A8A; }
+
+@media (max-width:768px){
+  header h1{font-size:1.9em;} .panel{padding:20px 16px;}
+  .question-text{font-size:1.2em;} .medal{font-size:4.2em;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="container">
+  <header>
+    <h1>🧠 Quiz I Miei Libri</h1>
+    <p>Metti alla prova quello che hai imparato!</p>
+  </header>
+
+  <!-- SCHERMATA: scelta modalità -->
+  <div class="screen active" id="screen-mode">
+    <div class="mode-cards">
+      <div class="mode-card" onclick="goSetup('classe')">
+        <span class="mode-emoji">📖</span>
+        <h2>Quiz di classe</h2>
+        <p>Domande di una classe: dalla 1ª alla 5ª, con materie a scelta</p>
+      </div>
+      <div class="mode-card" onclick="goSetup('generale')">
+        <span class="mode-emoji">🌍</span>
+        <h2>Quiz generale</h2>
+        <p>Domande casuali da tutte le classi della primaria</p>
+      </div>
+      <div class="mode-card" onclick="goSetup('multi')">
+        <span class="mode-emoji">🎲</span>
+        <h2>Quiz mix (fino a 3 classi)</h2>
+        <p>Scegli 2 o 3 classi e mischia le domande insieme</p>
+      </div>
+    </div>
+    <div class="btn-row">
+      <a href="index.html" class="back-link">🏠 Torna alla home</a>
+      <button class="btn btn-secondary" onclick="showScreen('screen-classifica')">🏆 Classifica</button>
+    </div>
+  </div>
+
+  <!-- SCHERMATA: configurazione -->
+  <div class="screen" id="screen-setup">
+    <div class="panel">
+      <h2 id="setup-title">Configura il quiz</h2>
+
+      <div class="option-group" id="group-classi">
+        <h3>📚 Quale classe?</h3>
+        <div class="class-grid" id="classGrid"></div>
+      </div>
+      <div id="materieBlock" style="display:none;">
+  <p style="font-weight:700;color:#334155;margin:14px 0 8px;">📚 Materie (scegli una o più; nessuna = tutte le materie)</p>
+  <div id="materieChips" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      </div>
+
+      <div class="option-group">
+        <h3>🎯 Difficoltà</h3>
+        <div class="chips" data-choice="difficolta">
+          <button class="chip selected" data-val="facile">😊 Facile</button>
+          <button class="chip" data-val="medio">😐 Medio</button>
+          <button class="chip" data-val="difficile">🧐 Difficile</button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <h3>🔢 Numero di domande</h3>
+        <div class="chips" data-choice="numDomande">
+          <button class="chip selected" data-val="5">5</button>
+          <button class="chip" data-val="10">10</button>
+          <button class="chip" data-val="20">20</button>
+          <button class="chip" data-val="30">30</button>
+        </div>
+      </div>
+
+
+      <div class="option-group">
+        <h3>⏱️ Timer di 30 secondi per domanda?</h3>
+        <div class="chips" data-choice="timer">
+          <button class="chip" data-val="si">Sì ⏳</button>
+          <button class="chip selected" data-val="no">No 🙌</button>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <h3>👤 Nome giocatore (opzionale)</h3>
+        <input class="player-input" id="playerName" maxlength="20" placeholder="Come ti chiami?">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="showScreen('screen-mode')">← Indietro</button>
+      <button class="btn btn-main" id="btnStart" onclick="startQuiz()">▶️ Inizia il quiz!</button>
+    </div>
+  </div>
+
+  <!-- SCHERMATA: gioco -->
+  <div class="screen" id="screen-game">
+    <div class="game-topbar">
+      <span class="game-counter" id="qCounter">Domanda 1 di 5</span>
+      <div class="timer-wrap" id="timerWrap" style="display:none;">
+        <div class="timer-bar" id="timerBar"></div>
+      </div>
+      <span class="game-score" id="scoreLabel">⭐ 0 punti</span>
+    </div>
+    <div class="question-card">
+      <span class="question-tag" id="qTag">Italiano • Classe 1ª</span>
+      <div class="question-text" id="qText">...</div>
+    </div>
+    <div class="answers" id="answersBox"></div>
+  </div>
+
+  <!-- SCHERMATA: fine quiz -->
+  <div class="screen" id="screen-end">
+    <div class="panel">
+      <div class="medal-area"><span class="medal" id="medalEmoji"></span></div>
+      <div class="result-title" id="endTitle"></div>
+      <div class="result-score" id="endScore"></div>
+      <div class="badge-row" id="badgeRow"></div>
+      <h2 style="margin-top:18px;">📊 Statistiche</h2>
+      <div id="statsBox"></div>
+      <div id="reportBox" style="margin-top:18px;"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnRetryWrong" onclick="retryWrongOnly()">🔄 Riprova solo le sbagliate</button>
+      <button class="btn btn-secondary" onclick="copyScore()">📤 Copia il punteggio</button>
+      <button class="btn btn-secondary" onclick="showScreen('screen-classifica'); renderLeaderboard();">🏆 Classifica</button>
+      <button class="btn btn-main" onclick="goHome()">🏠 Torna all'inizio</button>
+    </div>
+  </div>
+
+  <!-- SCHERMATA: classifica -->
+  <div class="screen" id="screen-classifica">
+    <div class="panel">
+      <h2>🏆 I tuoi migliori 5 punteggi</h2>
+      <div id="lbBox"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-danger" onclick="resetLeaderboard()">🗑️ Cancella classifica</button>
+      <button class="btn btn-main" onclick="goHome()">← Indietro</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="quiz-data.js"></script>
+<script>
+/* Cattura gli errori di avvio e gli errori console: usato dalla verifica automatica */
+window.__loadError = null;
+window.__consoleErrors = [];
+const __consoleErrorOriginal = console.error.bind(console);
+console.error = function(){
+  window.__consoleErrors.push(Array.prototype.join.call(arguments, ' '));
+  __consoleErrorOriginal.apply(null, arguments);
+};
+window.addEventListener('error', ev => {
+  window.__loadError = String((ev && ev.message) || (ev && ev.error) || 'errore');
+});
+
+/* ================== STATO ================== */
+const sel = { mode:'classe', classi:[], materie:[], difficolta:'facile', numDomande:5, timer:'no', nome:'' };
+const CLASSI = ['1','2','3','4','5'];
+// MATERIE viene calcolato in fondo allo script, dopo la definizione di QBANCO
+let MATERIE = [];
+
+/* ================== STORAGE SICURO ================== */
+function storeGet(key, fallback){
+  try{ const v = localStorage.getItem(key); return v === null ? fallback : v; }
+  catch(e){ return fallback; }
+}
+function storeSet(key, value){
+  try{ localStorage.setItem(key, value); return true; }
+  catch(e){ return false; }
+}
+function storeRemove(key){
+  try{ localStorage.removeItem(key); }catch(e){}
+}
+let quizQuestions = [], currentIndex = 0, score = 0, wrongList = [];
+let timerOn = false, secLeft = 30, timerInterval = null;
+
+/* ================== SUONI (Web Audio API) ================== */
+let audioCtx = null;
+function beep(freq, dur, type='sine', vol=0.15, delay=0){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    o.connect(g); g.connect(audioCtx.destination);
+    const t = audioCtx.currentTime + delay;
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t+dur);
+    o.start(t); o.stop(t+dur);
+  }catch(e){}
+}
+function soundCorrect(){ beep(523,.12,'triangle',.18); beep(784,.18,'triangle',.18,.1); }
+function soundWrong(){ beep(220,.25,'sawtooth',.12); beep(160,.3,'sawtooth',.12,.12); }
+function soundMedal(){ beep(523,.1,'triangle',.15); beep(659,.1,'triangle',.15,.1); beep(784,.22,'triangle',.15,.2); }
+
+/* ================== PARTICELLE ================== */
+(function(){
+  const cv = document.getElementById('particles'), ctx = cv.getContext('2d');
+  let W, H, parts = [];
+  const COLORS = ['#3B82F6','#10B981','#F59E0B','#EC4899','#8B5CF6','#0EA5E9'];
+  function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+  addEventListener('resize', resize); resize();
+  for(let i=0;i<40;i++) parts.push({
+    x:Math.random()*W, y:Math.random()*H,
+    r:3+Math.random()*6, s:.3+Math.random()*.8,
+    c:COLORS[i%COLORS.length], a:Math.random()*Math.PI*2, ph:.002+Math.random()*.004
+  });
+  (function loop(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of parts){
+      p.y -= p.s; p.a += p.ph; p.x += Math.sin(p.a)*.4;
+      if(p.y < -12){ p.y = H+10; p.x = Math.random()*W; }
+      ctx.globalAlpha = .5; ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    }
+    requestAnimationFrame(loop);
+  })();
+})();
+
+/* ================== NAVIGAZIONE SCHERMATE ================== */
+function showScreen(id){
+  const target = document.getElementById(id);
+  if(!target) return; // schermata inesistente: non toccare quella attiva
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  target.classList.add('active');
+  // La classifica va sempre ridisegnata quando si apre: vale sia per il
+  // pulsante della schermata iniziale sia per quello della schermata finale.
+  if(id === 'screen-classifica') renderLeaderboard();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function goHome(){ showScreen('screen-mode'); }
+
+/* ================== SETUP ================== */
+function goSetup(mode){
+  sel.mode = mode;
+  const titoli = {
+    classe:'📖 Quiz di classe — configura',
+    generale:'🌍 Quiz generale — configura',
+    multi:'🎲 Quiz mix — configura'
+  };
+  document.getElementById('setup-title').textContent = titoli[mode];
+  if(mode === 'classe'){
+    if(sel.classi.length !== 1) sel.classi = [sel.classi[0] || '1'];
+  } else if(mode === 'generale'){
+    sel.classi = CLASSI.slice();
+  } else {
+    sel.classi = [];
+  }
+  sel.materie = [];
+  const groupClassi = document.getElementById('group-classi');
+  if(groupClassi) groupClassi.style.display = (mode === 'generale') ? 'none' : 'block';
+  document.getElementById('materieBlock').style.display = 'block';
+  renderClassGrid();
+  renderMaterie();
+  refreshChipSel();
+  showScreen('screen-setup');
+}
+
+/* ================== GRIGLIA CLASSI ================== */
+function poolDiClasse(classe){
+  let pool = [];
+  Object.keys(QBANCO).forEach(k=>{
+    const num = String(k).match(/^\d+/);
+    if(num && num[0] === String(classe)) pool = pool.concat(QBANCO[k]);
+  });
+  return pool;
+}
+
+function shuffle(lista){
+  const arr = [...lista];
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/* Rimescola le opzioni di una domanda mantenendo corretta la risposta */
+function mescolaOpzioni(q){
+  const idx = q.ops.map((_, i) => i);
+  for(let i = idx.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  const ops = idx.map(i => q.ops[i]);
+  const r = idx.indexOf(q.r);
+  return { ...q, ops, r };
+}
+
+function renderClassGrid(){
+  const box = document.getElementById('classGrid');
+  if(!box) return;
+  box.innerHTML = '';
+  CLASSI.forEach(c=>{
+    const attiva = sel.classi.includes(c);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'class-chip' + (attiva ? ' selected' : '');
+    b.textContent = c + '\u00aa';
+    b.setAttribute('aria-pressed', attiva ? 'true' : 'false');
+    b.setAttribute('aria-label', 'Classe ' + c);
+    b.onclick = ()=>toggleClasse(c);
+    box.appendChild(b);
+  });
+}
+
+function toggleClasse(classe){
+  if(sel.mode === 'classe'){
+    sel.classi = [classe];
+  } else if(sel.mode === 'generale'){
+    return;
+  } else {
+    if(sel.classi.includes(classe)){
+      sel.classi = sel.classi.filter(c=>c !== classe);
+    } else if(sel.classi.length >= 3){
+      toast('Nel quiz mix puoi scegliere al massimo 3 classi 🎲');
+      return;
+    } else {
+      sel.classi = [...sel.classi, classe].sort();
+    }
+  }
+  renderClassGrid();
+  refreshChipSel();
+}
+
+/* ================== CHIP DI CONFIGURAZIONE ================== */
+function setChoice(chiave, valore){
+  sel[chiave] = (chiave === 'numDomande') ? Number(valore) : valore;
+  refreshChipSel();
+}
+
+function refreshChipSel(){
+  document.querySelectorAll('[data-choice]').forEach(gruppo=>{
+    const chiave = gruppo.dataset.choice;
+    gruppo.querySelectorAll('.chip[data-val]').forEach(chip=>{
+      chip.classList.toggle('selected', String(sel[chiave]) === chip.dataset.val);
+    });
+  });
+
+}
+
+function bindChoiceChips(){
+  document.addEventListener('click', e=>{
+    const chip = e.target.closest('[data-choice] .chip[data-val]');
+    if(!chip) return;
+    const gruppo = chip.closest('[data-choice]');
+    if(!gruppo || !gruppo.dataset.choice) return;
+    e.preventDefault();
+    setChoice(gruppo.dataset.choice, chip.dataset.val);
+  });
+}
+
+function renderMaterie(){
+  const box = document.getElementById('materieChips');
+  box.innerHTML = '';
+  MATERIE.forEach(m=>{
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'chip' + (sel.materie.includes(m)?' selected':'');
+    b.textContent = m;
+    b.setAttribute('aria-pressed', sel.materie.includes(m) ? 'true' : 'false');
+    b.onclick = ()=>{
+      if(sel.materie.includes(m)) sel.materie = sel.materie.filter(x=>x!==m);
+      else sel.materie.push(m);
+      renderMaterie();
+      refreshChipSel();
+    };
+    box.appendChild(b);
+  });
+}
+
+
+
+function buildPool(){
+  let pool = [];
+  sel.classi.forEach(c=>{ pool = pool.concat(poolDiClasse(c)); });
+  if(sel.materie.length) pool = pool.filter(q=>sel.materie.includes(q.m));
+  pool = pool.filter(q=>q.d===sel.difficolta);
+  return shuffle([...pool]);
+}
+
+function startQuiz(){
+  if(sel.mode === 'multi' && sel.classi.length < 2){
+    toast('Per il quiz mix scegli almeno 2 classi 🎲'); return;
+  }
+  if(!sel.classi.length){ toast('Scegli almeno una classe!'); return; }
+  let pool = buildPool();
+  const n = Math.min(Number(sel.numDomande), pool.length);
+  if(n===0){ toast('Nessuna domanda con questi filtri: prova un\u2019altra difficolt\u00e0 o \u201ctutti\u201d'); return; }
+  quizQuestions = pool.slice(0,n).map(mescolaOpzioni);
+  currentIndex = 0; score = 0; wrongList = [];
+  sel.nome = document.getElementById('playerName').value.trim();
+  timerOn = (sel.timer==='si');
+  document.getElementById('timerWrap').style.display = timerOn?'block':'none';
+  updateScore();
+  showScreen('screen-game');
+  showQuestion();
+}
+
+function updateScore(){
+  document.getElementById('scoreLabel').textContent = '⭐ ' + score + ' punti';
+}
+
+/* ================== TIMER ================== */
+function startTimer(){
+  if(!timerOn) return;
+  secLeft = 30;
+  const bar = document.getElementById('timerBar');
+  bar.style.transition='none'; bar.style.width='100%';
+  requestAnimationFrame(()=>{ bar.style.transition='width 1s linear'; });
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    secLeft--;
+    bar.style.width = Math.max(0,(secLeft/30)*100) + '%';
+    bar.classList.toggle('warning', secLeft<=8);
+    if(secLeft<=0){
+      clearInterval(timerInterval);
+      timeUp();
+    }
+  },1000);
+}
+function stopTimer(){ clearInterval(timerInterval); }
+
+function timeUp(){
+  soundWrong();
+  const q = quizQuestions[currentIndex];
+  document.querySelectorAll('#answersBox .answer-btn').forEach((b,i)=>{
+    b.disabled = true;
+    if(i===q.r) b.classList.add('correct');
+  });
+  wrongList.push({q, given:null});
+  setTimeout(nextQuestion, 1700);
+}
+
+/* ================== DOMANDE ================== */
+function showQuestion(){
+  const q = quizQuestions[currentIndex];
+  document.getElementById('qCounter').textContent = 'Domanda ' + (currentIndex+1) + ' di ' + quizQuestions.length;
+  document.getElementById('qTag').textContent = '📚 ' + q.m + ' • Classe ' + (q.cl||sel.classi[0]) + 'ª • ' + q.a;
+  document.getElementById('qText').textContent = q.q;
+  const box = document.getElementById('answersBox');
+  box.innerHTML = '';
+  const LETTERS = ['A','B','C','D'];
+  q.ops.forEach((op,i)=>{
+    const b = document.createElement('button');
+    b.className = 'answer-btn';
+    b.innerHTML = '<span class="letter">'+LETTERS[i]+'</span><span>'+op+'</span>';
+    b.onclick = ()=>answer(i,b);
+    box.appendChild(b);
+  });
+  startTimer();
+}
+
+function answer(i, btn){
+  stopTimer();
+  const q = quizQuestions[currentIndex];
+  const buttons = document.querySelectorAll('#answersBox .answer-btn');
+  buttons.forEach(b=>b.disabled=true);
+  if(i===q.r){
+    btn.classList.add('correct');
+    let pts = 10;
+    if(timerOn) pts += Math.round(secLeft/5);
+    score += pts;
+    soundCorrect();
+  }else{
+    btn.classList.add('wrong');
+    buttons[q.r].classList.add('correct');
+    soundWrong();
+    wrongList.push({q, given:q.ops[i]});
+  }
+  updateScore();
+  setTimeout(nextQuestion, 1300);
+}
+
+function nextQuestion(){
+  currentIndex++;
+  if(currentIndex >= quizQuestions.length){ endQuiz(); return; }
+  showQuestion();
+}
+/* ================== FINE QUIZ ================== */
+function endQuiz(){
+  stopTimer();
+  const tot = quizQuestions.length;
+  const corrette = tot - wrongList.length;
+
+  /* Medaglia */
+  const medal = document.getElementById('medalEmoji');
+  medal.classList.remove('medal'); void medal.offsetWidth;
+  if(corrette/tot >= .9){ medal.textContent = '🥇'; medal.classList.add('medal'); soundMedal(); }
+  else if(corrette/tot >= .6){ medal.textContent = '🥈'; medal.classList.add('medal'); soundMedal(); }
+  else if(corrette/tot >= .4){ medal.textContent = '🥉'; medal.classList.add('medal'); soundMedal(); }
+  else { medal.textContent = '📚'; medal.classList.add('medal'); }
+
+  const nomi = {oro:'Medaglia d\u2019ORO! Fantastico! 🌟', argento:'Medaglia d\u2019ARGENTO! Bravissimo! 👏', bronzo:'Medaglia di BRONZO! Buon lavoro! 💪', libro:'Continua a studiare, ce la puoi fare! 📖'};
+  document.getElementById('endTitle').textContent =
+    corrette/tot >= .9 ? nomi.oro : corrette/tot >= .6 ? nomi.argento : corrette/tot >= .4 ? nomi.bronzo : nomi.libro;
+  document.getElementById('endScore').textContent = '⭐ ' + score + ' punti • ' + corrette + ' su ' + tot + ' corrette';
+
+  /* Badge */
+  renderBadges(corrette, tot);
+
+  /* Statistiche per materia */
+  renderStats();
+
+  /* Report errori */
+  renderReport();
+
+  /* Salva punteggio in classifica */
+  saveScore(score, tot, corrette);
+
+  document.getElementById('btnRetryWrong').disabled = wrongList.length === 0;
+  showScreen('screen-end');
+}
+
+/* ================== BADGE ================== */
+function renderBadges(corrette, tot){
+  const row = document.getElementById('badgeRow');
+  row.innerHTML = '';
+  const badges = [];
+  const plays = Number(storeGet('quiz_plays', 0)) + 1;
+  storeSet('quiz_plays', plays);
+  if(plays === 1) badges.push('🌟 Prima volta!');
+  if(plays === 5) badges.push('🔥 5 quiz completati!');
+  if(plays === 10) badges.push('💎 10 quiz completati!');
+  if(corrette === tot && tot >= 5) badges.push('💯 Punteggio perfetto!');
+  if(score >= 200) badges.push('🚀 Over 200 punti!');
+  badges.forEach(b=>{
+    const s = document.createElement('span');
+    s.className = 'badge-new'; s.textContent = b;
+    row.appendChild(s);
+  });
+}
+
+/* ================== STATISTICHE PER MATERIA ================== */
+function renderStats(){
+  const box = document.getElementById('statsBox');
+  box.innerHTML = '';
+  const byMat = {};
+  quizQuestions.forEach((q,i)=>{
+    const sbagliata = wrongList.some(w=>w.q===q);
+    if(!byMat[q.m]) byMat[q.m] = {ok:0, tot:0};
+    byMat[q.m].tot++;
+    if(!sbagliata) byMat[q.m].ok++;
+  });
+  Object.keys(byMat).sort().forEach(m=>{
+    const d = byMat[m];
+    const line = document.createElement('div');
+    line.className = 'stat-line' + (d.ok===d.tot ? ' good' : '');
+    line.innerHTML = '<span>' + m + '</span><span>' + d.ok + '/' + d.tot + '</span>';
+    box.appendChild(line);
+  });
+}
+
+/* ================== REPORT ERRORI ================== */
+function renderReport(){
+  const box = document.getElementById('reportBox');
+  if(!wrongList.length){
+    box.innerHTML = '<div class="stat-line good"><span>🎉 Nessun errore: perfetto!</span></div>';
+    return;
+  }
+  let html = '<h2>📝 Le tue risposte sbagliate</h2>';
+  wrongList.forEach(w=>{
+    html += '<div class="report-item">'
+      + '<div class="rq">' + w.q.q + '</div>'
+      + (w.given ? '<div>❌ La tua risposta: <span class="rgiven">' + w.given + '</span></div>' : '<div>❌ Tempo scaduto! ⏳</div>')
+      + '<div>✅ Risposta giusta: <span class="rright">' + w.q.ops[w.q.r] + '</span></div>'
+      + '</div>';
+  });
+  box.innerHTML = html;
+}
+
+/* ================== RIPROVA SOLO LE SBAGLIATE ================== */
+function retryWrongOnly(){
+  if(!wrongList.length) return;
+  quizQuestions = shuffle(wrongList.map(w=>mescolaOpzioni(w.q)));
+  wrongList = []; currentIndex = 0; score = 0;
+  updateScore();
+  showScreen('screen-game');
+  showQuestion();
+}
+
+/* ================== CLASSIFICA (top 5, localStorage) ================== */
+function saveScore(score, tot, corrette){
+  let lb = [];
+  try{ lb = JSON.parse(storeGet('quiz_leaderboard', '[]')); }catch(e){}
+  if(!Array.isArray(lb)) lb = [];
+  lb.push({
+    nome: sel.nome || 'Anonimo',
+    punti: score,
+    su: tot,
+    corrette: corrette,
+    data: new Date().toLocaleDateString('it-IT')
+  });
+  lb.sort((a,b)=>b.punti - a.punti);
+  lb = lb.slice(0,5);
+  storeSet('quiz_leaderboard', JSON.stringify(lb));
+}
+
+function renderLeaderboard(){
+  const box = document.getElementById('lbBox');
+  let lb = [];
+  try{ lb = JSON.parse(storeGet('quiz_leaderboard', '[]')); }catch(e){}
+  if(!Array.isArray(lb)) lb = [];
+  if(!lb.length){ box.innerHTML = '<p style="color:#64748B;font-weight:600;">Nessun punteggio ancora: gioca il tuo primo quiz! 🎮</p>'; return; }
+  const MEDS = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  box.innerHTML = '';
+  lb.forEach((e,i)=>{
+    const d = document.createElement('div');
+    d.className = 'lb-item';
+    d.innerHTML = '<span class="lb-pos">' + MEDS[i] + '</span>'
+      + '<span class="lb-name">' + esc(e.nome) + '</span>'
+      + '<span>⭐ ' + e.punti + ' <small>(' + e.corrette + '/' + e.su + ' • ' + e.data + ')</small></span>';
+    box.appendChild(d);
+  });
+}
+
+function resetLeaderboard(){
+  if(!confirm('Cancellare tutti i punteggi salvati?')) return;
+  storeRemove('quiz_leaderboard');
+  storeRemove('quiz_plays');
+  renderLeaderboard();
+}
+
+/* ================== CONDIVISIONE ================== */
+function copyScore(){
+  const txt = '🧠 Quiz "I Miei Libri"\n⭐ Punteggio: ' + score + ' punti\n✅ ' +
+    (quizQuestions.length - wrongList.length) + '/' + quizQuestions.length + ' risposte corrette\n' +
+    '🏅 ' + (document.getElementById('medalEmoji').textContent || '') +
+    (sel.nome ? '\n👤 ' + sel.nome : '');
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+    .then(()=>toast('📋 Punteggio copiato!'))
+    .catch(()=>{
+      const ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); toast('📋 Punteggio copiato!'); }
+      catch(e){ toast('Copy non supportato 😕'); }
+      ta.remove();
+    });
+}
+
+/* ================== UTILITY ================== */
+function esc(s){ const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+let toastTimer = null;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+
+
+
+MATERIE = [...new Set(Object.values(QBANCO).flat().map(q=>q.m))].sort((a,b)=>a.localeCompare(b));
+bindChoiceChips();
+refreshChipSel();
+
+/* Validatazione interna del banco domande (errori segnalati in console) */
+(function validaBanco(){
+  const problemi = [];
+  Object.keys(QBANCO).forEach(k=>{
+    if(!Array.isArray(QBANCO[k])){ problemi.push(k + ': non \u00e8 un array'); return; }
+    QBANCO[k].forEach((q,i)=>{
+      const etichetta = k + '[' + i + ']';
+      if(!q || typeof q !== 'object'){ problemi.push(etichetta + ': domanda non valida'); return; }
+      if(!q.q || typeof q.q !== 'string') problemi.push(etichetta + ': testo mancante');
+      if(!Array.isArray(q.ops) || q.ops.length < 2) problemi.push(etichetta + ': opzioni insufficienti');
+      if(typeof q.r !== 'number' || !Array.isArray(q.ops) || q.r < 0 || q.r >= q.ops.length) problemi.push(etichetta + ': risposta corretta fuori intervallo');
+      if(!q.d || !q.m || !q.a) problemi.push(etichetta + ': metadati mancanti (m/a/d)');
+      const classeKey = String(k).match(/^\d+/);
+      if(q.cl && classeKey && String(q.cl) !== classeKey[0]) problemi.push(etichetta + ': classe incoerente');
+    });
+  });
+  if(problemi.length) console.warn('Banco domande: ' + problemi.length + ' problemi', problemi);
+  else console.log('Banco domande valido: nessun problema rilevato.');
+  window.__qbancoProblemi = problemi;
+})();
+
+console.log('Banco domande caricato: ' + Object.keys(QBANCO).length + ' classi.');
+
+</script>
+</body>
+</html>
